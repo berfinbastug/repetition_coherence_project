@@ -1,0 +1,20 @@
+# System files
+.DS_Store
+
+# R files to ignore
+*.Rhistory
+*.RData
+
+# Large raw data or experiment files (optional)
+*.csv
+stimuli_tapping/
+stim_illustration/
+results_figure/
+figures_for_paper/
+observer_model/
+detection_experiment/
+tapping_experiment/
+
+# Python caches
+__pycache__/
+*.pyc
