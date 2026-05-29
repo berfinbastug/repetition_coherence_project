@@ -7,10 +7,9 @@
 
 # Large raw data or experiment files (optional)
 *.csv
+archive/
+svg_figures/
 stimuli_tapping/
-stim_illustration/
-results_figure/
-figures_for_paper/
 detection_experiment/
 tapping_experiment/
 
