@@ -10,6 +10,9 @@ data$unitdur <- factor(data$unitdur)
 data$participant_id <- factor(data$participant_id)
 data$percentage <- factor(data$percentage)
 
+
+colnames(data)
+
 # 3 X 10 within-subjects ANOVA 
 anova_results <- ezANOVA(
   data = data,
@@ -36,10 +39,9 @@ apa.ezANOVA.table(anova_results, correction = "GG", table.title = "ANOVA Results
 fa_data <- data %>% filter(percentage == "0")
 
 
-# Compute false alarm rate
+# If mean_yes is already the proportion of "yes" responses:
 fa_data <- fa_data %>%
-  mutate(false_alarm = 1 - n_correct / n_trial)
-
+  mutate(false_alarm = mean_yes)
 
 # Run one-way repeated measures ANOVA across unit duration
 fa_anova <- ezANOVA(
@@ -79,3 +81,23 @@ fa_summary <- fa_participant_summary %>%
   )
 
 fa_summary
+
+
+# Step 1: Mean per participant per unit duration
+participant_summary <- data %>%
+  group_by(participant_id, unitdur) %>%
+  summarise(
+    participant_mean_yes = mean(mean_yes, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Step 2: Mean and SD across participants per unit duration
+unitdur_summary <- participant_summary %>%
+  group_by(unitdur) %>%
+  summarise(
+    mean_yes = mean(participant_mean_yes, na.rm = TRUE),
+    sd_yes = sd(participant_mean_yes, na.rm = TRUE),
+    n = n()
+  )
+
+unitdur_summary

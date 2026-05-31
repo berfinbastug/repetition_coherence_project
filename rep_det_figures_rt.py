@@ -139,7 +139,7 @@ participant_summary_ncycle = (
     .reset_index()
 )
 
-
+participant_summary_ncycle.to_csv('n_cycle_for_r.csv', index=False)
 correct_trials = df_det_no_outlier[df_det_no_outlier['correct'] == 1]
 
 

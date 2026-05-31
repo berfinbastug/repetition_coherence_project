@@ -5,11 +5,7 @@ from scipy import signal as sps
 import itertools as it
 import pandas as pd
 from statsmodels.tsa.stattools import acf
-from matplotlib import pyplot as plt
-import seaborn as sns
-import matplotlib.colors as mcolors
-from matplotlib.colorbar import ColorbarBase
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 
 # %%
 # REPRODUCIBILITY
@@ -17,6 +13,22 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # Change this number to get a different (but still reproducible) realization.
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
+
+# the parameters I used before 02.01.2026
+# period_min = 10
+# period_max = 50
+# period_domain = np.linspace(period_min, period_max, num=10, dtype=int)
+# delta to scale the decision threshold with period = 0.2
+
+# after 02.01.2026 changes
+# period_min = 10
+# period_max = 30
+# period_domain = np.logspace(np.log10(period_min), np.log10(period_max), num=5, dtype=int)
+# delta to scale the decision threshold with period = 0.2
+
+# CONTENTS:
+# An ideal observer for the repetition detection/tapping task
+# Simulations with various parameters
 
 
 # %%
@@ -32,20 +44,16 @@ np.random.seed(RANDOM_SEED)
 # block-only variability, or kept positive to combine both sources.
 SIMULATION_MODE = "sweep_base"   # "single_base" or "sweep_base"
 
-
-
-
-# %%
-# SIMULATION PARAMETERS
 title = "norm-corr"
-period_min, period_max = 20, 40
-period_domain = np.logspace(np.log10(period_min), np.log10(period_max),
-                            num=3, dtype=int)
+period_min, period_max = 20 , 40
+period_domain = np.logspace(np.log10(period_min), np.log10(period_max), num=3, dtype=int)
 
+reps_min, reps_max = 2, 31 # logarithmically spaced repetitions domain from 2 to 30
+repetitions_domain = np.logspace(
+    np.log10(reps_min), np.log10(reps_max), 
+    num=10)
 
-reps_min, reps_max = 2, 31
-repetitions_domain = np.logspace(np.log10(reps_min), np.log10(reps_max),
-                                  num=10)
+# Convert to int and remove duplicates
 repetitions_domain = np.unique(repetitions_domain.astype(int))
 snr_domain = np.linspace(0.0, 1.0, num=30).round(2)
 
@@ -54,10 +62,12 @@ do_repeat_domain = [True]
 n_minus_k_norm = False
 internal_noise_level = 0.15
 
+
 # Criterion model parameters
 BASE_CRITERION = 0.3      # used in "single_base" mode
 SIGMA_CRIT = 0.07          # trial-level Gaussian noise on the criterion (both modes)
-CRITERION_SLOPE = 0.3     # how much criterion rises with normalized log-period
+
+NOISE_SLOPE = 0.6     # how much INTERNAL SENSORY NOISE rises with normalized log-period
 
 # Baseline sweep range — used only in "sweep_base" mode
 decision_domain = np.linspace(0.3, 0.40, num=10)
@@ -73,8 +83,10 @@ if SIMULATION_MODE == "single_base":
 else:  # sweep_base
     num_simulations = 50
 
+
 # %%
 # SIMULATION LOOP
+# Initialize results lists
 estimations = []
 repeat_condition = []
 period_condition = []
@@ -87,6 +99,9 @@ decisions = []
 accuracies = []
 max_autocorrs = []
 sizes_confint = []
+sensory_noise_level = []
+
+
 
 # Build the iteration list according to mode
 if SIMULATION_MODE == "single_base":
@@ -96,45 +111,49 @@ elif SIMULATION_MODE == "sweep_base":
 else:
     raise ValueError(f"Unknown SIMULATION_MODE: {SIMULATION_MODE}")
 
-for n in range(num_simulations):
-    if n % 50 == 0:
-        print(f"SIMULATION NUMBER: {n}/{num_simulations}")
 
-    for period, repetitions, snr, do_repeat, base_thresh in it.product(
-        period_domain, repetitions_domain, snr_domain,
-        do_repeat_domain, base_iter):
 
-        # Period-dependent decision criterion
-        # Logarithmic scaling: period_min -> 0, period_max -> 1
-        raw_scaling = np.log(period / period_min)
-        max_raw_scaling = np.log(period_max / period_min)
-        normalized_scaling = raw_scaling / max_raw_scaling
+for n in range(0, num_simulations):
 
-        # Apply criterion slope
-        scaled_criterion = base_thresh + (normalized_scaling * CRITERION_SLOPE)
+    print(f"SIMULATION NUMBER: {n}/{num_simulations}")
+    
+
+    for period, repetitions, snr, do_repeat, base_thresh in it.product(  # experiment factors
+        period_domain, repetitions_domain, snr_domain, do_repeat_domain, base_iter):
 
         # Add trial-level Gaussian noise to the criterion (the new piece)
         if SIGMA_CRIT > 0:
             criterion_noise = np.random.normal(0, SIGMA_CRIT)
         else:
             criterion_noise = 0.0
-        decision_thresh = scaled_criterion + criterion_noise
+        decision_thresh = base_thresh + criterion_noise
 
         # Clip to [0, 1] — outside this range the criterion is meaningless
         decision_thresh = float(np.clip(decision_thresh, 0.0, 1.0))
 
-        # Generate stimulus
-        stimulus = make_julez_stream(snr=snr, len_unit=period,
-                                     num_reps=repetitions)
-
-        # Internal sensory noise
-        int_noise = np.random.uniform(-1.0, 1.0, size=[stimulus.shape[0]])
+        # Generate stimulus for observer
+        stimulus = make_julez_stream(snr=snr, len_unit=period, num_reps=repetitions)
+        # Generate internal noise (normalized to RMS = 1)
+        int_noise = np.random.uniform(-1.0, 1.0, size=stimulus.shape)
         int_noise -= int_noise.mean()
         int_noise /= rms(int_noise)
 
-        noised_stim = stimulus + (internal_noise_level * int_noise)
+
+        # Period-dependent internal sensory noise
+        # Logarithmic scaling: period_min -> 0, period_max -> 1
+        raw_scaling = np.log(period / period_min)
+        max_raw_scaling = np.log(period_max / period_min)
+        normalized_scaling = raw_scaling / max_raw_scaling
+
+        # Apply noise slope
+        scaling_level = internal_noise_level + (normalized_scaling * NOISE_SLOPE)
+        scaled_noise = int_noise * scaling_level
+
+        # Add to stimulus
+        noised_stim = stimulus + scaled_noise
         noised_stim -= noised_stim.mean()
         noised_stim /= rms(noised_stim)
+
 
         # PERCEPTION: autocorrelation
         lags = sps.correlation_lags(noised_stim.shape[0],
@@ -151,12 +170,15 @@ for n in range(num_simulations):
             peak_idx = np.array([np.random.randint(0, corr.size)])
         best_idx = peak_idx[np.argmax(corr[peak_idx])]
 
+        # ESTIMATION of periodicity lag
+        # array of positive lag indices  sorted (min to max) according to corrrelation
         best_lag = lags_nonneg[best_idx]
         estimation = (best_lag % period) + period
 
-        # Estimation error (kept for completeness; note: with the
-        # estimation formula above this is just |best_lag % period|)
-        error = min(np.abs(estimation - period), estimation)
+
+        # ERROR in estimation
+        error = min(np.abs(estimation - period), estimation) # take the minimum due to circularity
+        # error /= (period // 2) - 1  # normalize by maximum possible error depending on period
 
         # DECISION
         max_corr = corr[best_idx]
@@ -165,38 +187,43 @@ for n in range(num_simulations):
         decision = bool(max_corr >= decision_thresh)
         accuracy = 1 if decision == do_repeat else 0
 
-        # Aggregate
-        estimations.append(estimation.item())
+        # Aggregate simulation results
+        estimations.append(estimation.item())  # lags
         repeat_condition.append(do_repeat)
         period_condition.append(period.item())
         snr_condition.append(snr.item())
         repetitions_condition.append(repetitions.item())
         base_criterion_used.append(float(base_thresh))
         effective_threshold_used.append(decision_thresh)
-        errors.append(error.item())
+        errors.append(error.item())  # lag estimation error
         decisions.append(decision)
         accuracies.append(accuracy)
         max_autocorrs.append(max_corr.item())
         sizes_confint.append(size_confint.item())
+        sensory_noise_level.append(float(scaling_level))
+
+
 
 
 # %%
 # BUILD DATAFRAME
 col_names = ['Estimation', 'Repeated', 'Period', "SNR",
              "Reps", "BaseCriterion", "Threshold", "Error",
-             "Decision", "Accuracy", "Autocorr", "SizeConf"]
+             "Decision", "Accuracy", "Autocorr", "SizeConf", "NoiseScale"]
 
 df_wide = pd.DataFrame(
     list(zip(estimations, repeat_condition, period_condition,
              snr_condition, repetitions_condition,
              base_criterion_used, effective_threshold_used,
              errors, decisions, accuracies,
-             max_autocorrs, sizes_confint)),
+             max_autocorrs, sizes_confint, sensory_noise_level)),
     columns=col_names)
 
 df_wide["id"] = df_wide.index
 df_wide["estimation_accuracy"] = df_wide["Period"] == df_wide["Estimation"]
+# df = df_wide.set_index(["id", "Period", "SNR", "Reps", 
+#                         "Decision", "Repeated"]) # to long format
 
-# Save with a mode-specific filename so you don't overwrite previous runs
-out_path = f"acf_model_simulations_threshold_scaled_seed{RANDOM_SEED}.csv"
+# save the dataframe
+out_path = f"acf_model_simulations_internal_noise_scaled_seed{RANDOM_SEED}.csv"
 df_wide.to_csv(out_path, index=False)

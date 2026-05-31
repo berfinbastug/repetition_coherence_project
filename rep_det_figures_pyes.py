@@ -236,7 +236,8 @@ summary_participant = df_det_no_outlier.groupby(['unitdur', 'percentage', 'parti
     n_trial = ('actual_response', 'count'),
 ).reset_index()
 
-
+# FOR R
+summary_participant.to_csv('detection_performance_for_r.csv', index=False)
 
 unit_durations = [0.4, 0.7, 1.0]
 x_fit = np.linspace(0, 1, 500)
@@ -480,7 +481,7 @@ for unitdur in unit_durations:
 
 combined_fit_df = pd.concat(all_fit_results, ignore_index=True)
 threshold_df = pd.DataFrame(thresholds_50)
-
+threshold_df.to_csv('threshold_50_detection_for_r.csv', index=False)
 
 threshold_df_det = threshold_df.dropna(subset = ['threshold_percentage'])
 # Convert to string for categorical plotting
