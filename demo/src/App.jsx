@@ -120,8 +120,12 @@ function synthesizeAudio(tones, totalDuration, sampleRate = 44100) {
     }
   }
 
-  // Normalize
-  const peak = Math.max(...buffer.map(Math.abs));
+  // Normalize (loop instead of spread to avoid stack overflow on large arrays)
+  let peak = 0;
+  for (let i = 0; i < buffer.length; i++) {
+    const abs = Math.abs(buffer[i]);
+    if (abs > peak) peak = abs;
+  }
   if (peak > 0) {
     const scale = 0.3 / peak;
     for (let i = 0; i < buffer.length; i++) buffer[i] *= scale;
