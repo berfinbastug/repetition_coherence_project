@@ -36,7 +36,7 @@ function generateToneCloud({ unitdur, percentage, nrep, seed }) {
     Array.from({ length: ntsteps }, () => rand())
   );
 
-  // Nominal gridss
+  // Nominal grids
   const bigf = freqgrid.map((f) => Array(ntsteps).fill(f));
   const bigt = Array.from({ length: nfsteps }, () => [...timegrid]);
 
@@ -259,12 +259,17 @@ export default function App() {
     startTimeRef.current = null;
   }, []);
 
-  const playAudio = useCallback(() => {
+  const playAudio = useCallback(async () => {
     if (isPlaying) { stopPlayback(); return; }
 
     const ctx = audioCtxRef.current || new (window.AudioContext || window.webkitAudioContext)();
     audioCtxRef.current = ctx;
-    if (ctx.state === "suspended") ctx.resume();
+
+    // resume() is async — wait for the context to actually be running
+    // before starting playback, or the sound is dropped (silence).
+    if (ctx.state !== "running") {
+      try { await ctx.resume(); } catch (e) { console.error("resume failed", e); }
+    }
 
     const sampleRate = ctx.sampleRate;
     const rawBuffer = synthesizeAudio(cloud.tones, cloud.totalDuration, sampleRate);
