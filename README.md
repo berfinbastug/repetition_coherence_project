@@ -1,5 +1,27 @@
 Bastug et al., *"Computational Principles of Auditory Object Formation Are Revealed by Repetition Coherence."*
 
+# Preprocessing & Utilities
+These scripts handle data preparation and minor supplementary outputs. They are not tied to a specific manuscript figure but feed into the main analysis pipelines. 
+
+### `identify_common_participants.py`  
+Reads the separate CSVs for the two tasks (detection and SMS), identifies participants present in both, filters each data frame to that common set, and writes the results. 
+
+Inputs:
+- `all_dfs_merged_detection_experiment.csv` 
+- `all_participants_tap_and_actual_onset_values.csv` 
+
+Outputs:
+- `df_det_common.csv` 
+- `df_tap_common.csv` 
+
+---
+
+### `circular_tap_distributions.py`  
+Example circular histograms (Figure 5B inset). 
+Produces polar histograms of tapping-phase distributions for one good and one bad trial examples.  
+
+---
+
 # Repetition Detection — Analysis & Figure Code
 Analysis and figure-generation scripts for the **Repetition Detection task**  
 
@@ -158,48 +180,60 @@ Expected columns:
 
 ---
 
+# Stimulus Generation Schematics 
+Figure 1. All these scripts are inside stim_illustration. 
+
+### `stimulus_params.py` 
+Default parameter dictionary (`sP_default`): frequency range (200-3000 Hz), 0.4-octave grid step, 0.05 s time step, tone duration, unit duration, nrep, coherence, sample rate (44100 Hz), ramp time. 
+
+### `ramp_function.py` 
+`psyramp(x, rtime, fs)`: applies cosine-squared onset/offset ramps to individual tone pips (0.025s default). Prevents clicks at tone boundaries.
+
+### `tone_cloud_production.py` 
+`gencloudcoherence(sP, change_dict)`: the main stimulus factory. Builds the time-frequency grid, selects frozen vs. new tones according to `percentage`, tiles across `nrep` cycles, synthesizes the waveform (summed ramped sinusoids), normalizes, zero-pads. Returns `(waveform, params)`
+
+### `single_tone_cloud_schematic.py` 
+One unit of a tone cloud (1 cycle, 0.4 s). Produces schematic tone clouds` --> Figure A (spectogram-style grid with horizontal lines for each tone pip). 
+
+### `repetition_coherence_gradient_schematic.py` 
+2-cycle strips at five coherence levels (0, 0.22, 0.44, 0.67, 1), side by side. Blue = frozen, gray = new. --> Figure 1C.  
+
+### `task_illustration_schematic.py` 
+4-cycle "yes" trial (coherence = 0.78) and "no" trial (coherence =0), plotted separately --> `4rep_trial_yes.svg`, `4rep_trial_no.svg`--> Figure 1D. 
+
+### `tap_illustrations.py` 
+Synthetic damped-sinusoid tap waveform (4 taps with jitter and negative asynchrony) --> `sms_taps_jittered.svg` --> Figure 1E tap overlay. 
+
+### `plot_cochleagram.py` 
+Generates a tone cloud via `gencloudcoherence`, computes a cochleagram (using `pycochleagram`) and plots it --> Figure 1B. Requires the external  `pycochleagram` library and a local path to the toolbox. 
+
+
+
+
+
+
+
 Let's first keep track of folders
 ### Folders:
-1- detection_experiment
-2- figures_for_paper (i need to check this)
-3- stim_illustration (check this)
-4- stimuli_tapping (check this)
-5- tapping experiment
-6- r_codes
-    NECESSARY CSVs
-    detection_performance_for_r.csv 
-    threshold_detection_50_for_r.csv
-    n_cycle_for_r.csv
-    prop_sig_df_for_r.csv
-    threshold_50_sms_for_r.csv
-    CODES
-    anova_detection_performance.R
-    anova_n_cycle.R
-    anova_prop_significant.R
-    anova_threshold_detection.R
-    anova_threshold_sms.R
+1. detection_experiment
+2. tapping experiment
+3. observer_model
+4. svg_figures
+5. stim_illustration
+6. statistical_analyses
+   1. anova_prop_significant
+   2. anova_prop_yes
+   3. anova_threshold_detection
+   4. anova_threshold_sms
+   5. anova_time
+   6. CSVs
+      1. detection_performance_for_r.csv
+      2. n_cycle_for_r.csv
+      3. prop_sig_df_for_r.csv
+      4. threshold_50_detection_for_r.csv
+      5. threshold_50_sms_for_r.csv
+   
 
-
-Okay, after that we have two building blocks csv files. 
-### Building block csvs
-1- all_dfs_merged_detection_experiment.csv  (I NEED TO CHECK THIS)
-2- all_participants_tap_and_actual_onset_values.csv
-
-
-###  Python analysis
-1- repetition_detection_task.ipynb
-    OUTPUTS:
-    detection_performance_for_r.csv 
-    threshold_detection_50_for_r.csv
-    n_cycle_for_r.csv
-2- sms_task.ipynb
-    OUTPUTS:
-    prop_sig_df_for_r.csv
-    threshold_50_sms_for_r.csv
-
-
-3- tapping_analysis_repo.py
-This one is important for sms task because i use several functions to finalize the whole analysis
 
 
 
