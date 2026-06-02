@@ -36,7 +36,7 @@ function generateToneCloud({ unitdur, percentage, nrep, seed }) {
     Array.from({ length: ntsteps }, () => rand())
   );
 
-  // Nominal grids
+  // Nominal gridss
   const bigf = freqgrid.map((f) => Array(ntsteps).fill(f));
   const bigt = Array.from({ length: nfsteps }, () => [...timegrid]);
 
