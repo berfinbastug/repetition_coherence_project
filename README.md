@@ -209,7 +209,9 @@ Generates a tone cloud via `gencloudcoherence`, computes a cochleagram (using `p
 
 
 
-
+### Interactive Demo
+[▶ Explore the stimuli](https://github.com/berfinbastug/repetition_coherence_project.git)
+— adjust coherence and unit duration, hear the tone clouds.
 
 
 
