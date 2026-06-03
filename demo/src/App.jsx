@@ -137,7 +137,7 @@ function synthesizeAudio(tones, totalDuration, sampleRate = 44100) {
 // ─── Visualization component ────────────────────────────────────────────────
 
 const FROZEN_COLOR = "#2576B8";
-const NEW_COLOR = "#9E9E9E";
+const NEW_COLOR = "#5c5b5b";
 
 function ToneCloudViz({ tones, totalDuration, lowf, highf, freqgrid, unitdur, playheadPos }) {
   const W = 700;
@@ -164,7 +164,7 @@ function ToneCloudViz({ tones, totalDuration, lowf, highf, freqgrid, unitdur, pl
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 700, display: "block" }}>
       {/* Background */}
-      <rect x={PAD.left} y={PAD.top} width={plotW} height={plotH} fill="rgba(245,247,250,0.6)" rx="2" />
+      <rect x={PAD.left} y={PAD.top} width={plotW} height={plotH} fill="rgb(255, 255, 255)" rx="2" />
 
       {/* Freq grid */}
       {freqgridPlot.map((f, i) => (
@@ -176,7 +176,7 @@ function ToneCloudViz({ tones, totalDuration, lowf, highf, freqgrid, unitdur, pl
       {Array.from({ length: Math.round(totalDuration / 0.05) + 1 }, (_, i) => i * 0.05).map((t, i) => (
         <line key={`tg${i}`} x1={toX(t)} x2={toX(t)}
           y1={PAD.top} y2={H - PAD.bottom}
-          stroke={boundaries.some((b) => Math.abs(t - b) < 0.001) ? "#999" : "#eee"}
+          stroke={boundaries.some((b) => Math.abs(t - b) < 0.001) ? "#1a1a1a" : "#eee"}
           strokeWidth={boundaries.some((b) => Math.abs(t - b) < 0.001) ? 1.5 : 0.4}
           strokeDasharray={boundaries.some((b) => Math.abs(t - b) < 0.001) ? "4,3" : "none"} />
       ))}
@@ -238,13 +238,19 @@ export default function App() {
   const animRef = useRef(null);
   const startTimeRef = useRef(null);
   const SEED = 42;
-  const NREP = 4;
+  const NREP_VIZ = 4;  // used in generateToneCloud for the vizualization
+  const NREP_AUDIO = 10;  // used in synthesizeAudio for the vizualization
 
   const unitdur = DURATION_OPTIONS[durIdx].value;
   const percentage = COHERENCE_STEPS[coherence];
 
   const cloud = useMemo(
-    () => generateToneCloud({ unitdur, percentage, nrep: NREP, seed: SEED }),
+    () => generateToneCloud({ unitdur, percentage, nrep: NREP_VIZ, seed: SEED }),
+    [unitdur, percentage]
+  );
+
+  const cloudAudio = useMemo(
+    () => generateToneCloud({ unitdur, percentage, nrep: NREP_AUDIO, seed: SEED }),
     [unitdur, percentage]
   );
 
@@ -259,15 +265,20 @@ export default function App() {
     startTimeRef.current = null;
   }, []);
 
-  const playAudio = useCallback(() => {
+  const playAudio = useCallback(async () => {
     if (isPlaying) { stopPlayback(); return; }
 
     const ctx = audioCtxRef.current || new (window.AudioContext || window.webkitAudioContext)();
     audioCtxRef.current = ctx;
-    if (ctx.state === "suspended") ctx.resume();
+
+    // resume() is async — wait for the context to actually be running
+    // before starting playback, or the sound is dropped (silence).
+    if (ctx.state !== "running") {
+      try { await ctx.resume(); } catch (e) { console.error("resume failed", e); }
+    }
 
     const sampleRate = ctx.sampleRate;
-    const rawBuffer = synthesizeAudio(cloud.tones, cloud.totalDuration, sampleRate);
+    const rawBuffer = synthesizeAudio(cloudAudio.tones, cloudAudio.totalDuration, sampleRate);
     const audioBuffer = ctx.createBuffer(1, rawBuffer.length, sampleRate);
     audioBuffer.copyToChannel(rawBuffer, 0);
 
@@ -278,7 +289,7 @@ export default function App() {
     source.onended = () => { stopPlayback(); };
 
     const padDur = 0.2;
-    const totalAudioDur = cloud.totalDuration + 0.4 + 0.05 / sampleRate;
+    const totalAudioDur = cloudAudio.totalDuration + 0.4 + 0.05 / sampleRate;
     startTimeRef.current = ctx.currentTime;
     source.start();
     sourceRef.current = source;
