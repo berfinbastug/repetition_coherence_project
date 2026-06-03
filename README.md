@@ -4,7 +4,6 @@ Bastug et al., *"Computational Principles of Auditory Object Formation Are Revea
 [▶ Explore the stimuli](https://berfinbastug.github.io/repetition_coherence_project/)   
 Adjust coherence and unit duration, hear the tone clouds.
 
----
 
 # Preprocessing & Utilities
 These scripts handle data preparation and minor supplementary outputs. They are not tied to a specific manuscript figure but feed into the main analysis pipelines. 
@@ -20,13 +19,11 @@ Outputs:
 - `df_det_common.csv` 
 - `df_tap_common.csv` 
 
----
 
 ### `circular_tap_distributions.py`  
 Example circular histograms (Figure 5B inset). 
 Produces polar histograms of tapping-phase distributions for one good and one bad trial examples.  
 
----
 
 # Repetition Detection — Analysis & Figure Code
 Analysis and figure-generation scripts for the **repetition detection task**  
@@ -52,7 +49,6 @@ Outputs:
 - `threshold_50_detection_for_r.csv` — individual detection thresholds.
 - `weibull_combined.svg`, `threshold_violin.svg` — figure panels.
 
----
 
 ### `rep_det_figures_rt.py` 
 Reaction times & cycles (Figure 3) 
@@ -71,7 +67,6 @@ Outputs:
 - `n_cycle_for_r.csv` — per-participant summaries for R-side stats.
 - `ncycle_rt_combined.svg` — combined RT + N-cycles figure.
 
----
 
 ### Input data
 
@@ -90,7 +85,6 @@ Expected columns:
 - `correct` — 1/0
 - `actual_response` — 1 = "yes", 0 = "no"
 
----
 
 ### Outlier pipeline (shared by both scripts)
 
@@ -100,7 +94,6 @@ Expected columns:
 
 Total excluded: ~4.05% of trials (manuscript Methods).
 
----
 
 ### Notes / TODO
 
@@ -108,7 +101,6 @@ Total excluded: ~4.05% of trials (manuscript Methods).
 - [ ] Factor shared outlier-cleaning code into a small `utils.py` (currently duplicated across the two scripts).
 - [ ] Move figure output to a dedicated `figures/` directory.
 
----
 
 # Sensorimotor Synchronization — Analysis & Figure Code
 Analysis and figure-generation scripts for the **sensorimotor synchronization (SMS) task**  
@@ -122,7 +114,6 @@ This is a shared helper module
 `compute_z_scored_r(observed_r, n_taps)` — z-score of an observed resultant length against the null distribution. This was used as the tappinng-phase consistency measure throughout. 
 `compute_sliding_window_values(actual_onset_s, tap_onset_s, unit_dur)` — sliding-window analysis. Window = 10 cycles, step = 1 cycle. Within each window: aligns taps to nearest preceding onset, computes resultant length, Rayleigh z, and z-scored r. Returns three lists (one value per window).
 
----
 
 ### `tapping_figures_sync.py` 
 Synchronization success and threshold (Figure 4 + Figure 5B-C) 
@@ -147,7 +138,6 @@ Outputs:
 - **Figure 5B** — Example trials (good and bad) showing tap phase vs tap index with stable-phase band 
 - **Figure 5C** - Violin. of `min_stable_index` (earliest stable tap) per unit duration at coherence = 1  
 
----
 
 ### `sms_figures_exp.py` 
 Within trial dynamics (Figure 5A). 
@@ -163,7 +153,6 @@ Key steps:
 Outputs:
 - **Figure 5A** — Three panels (one per unit duration) showing z-scored resultant length as a function of sliding window index. Coherence is represented as a color gradient. There is a significance line (p = 0.05). 
   
----
 
 ### Input data
 
@@ -181,7 +170,6 @@ Expected columns:
 - `actual_onset_values` — [AT SOME POINT ADD DETAILS OF WHAT THEY ARE]
 - `tap_onset_values` — [AT SOME POINT ADD DETAILS OF WHAT THEY ARE]
 
----
 
 ### Notes / TODO
 
@@ -189,7 +177,6 @@ Expected columns:
 - [ ] Hard coded absolute path.  
 - [ ] In `sms_figures_sync.py` the `tap_onset_delays_list` / "select taps in window" block is itself duplicated twice (last-20-cycles version and all-cycles version) — pull out a `delays_in_window(actual, taps, window)` helper.
 
----
 
 # Stimulus Generation Schematics 
 Figure 1. All these scripts are inside stim_illustration. 
@@ -197,37 +184,30 @@ Figure 1. All these scripts are inside stim_illustration.
 ### `stimulus_params.py` 
 Default parameter dictionary (`sP_default`): frequency range (200-3000 Hz), 0.4-octave grid step, 0.05 s time step, tone duration, unit duration, nrep, coherence, sample rate (44100 Hz), ramp time. 
 
----
 
 ### `ramp_function.py` 
 `psyramp(x, rtime, fs)`: applies cosine-squared onset/offset ramps to individual tone pips (0.025s default). Prevents clicks at tone boundaries.
 
----
 
 ### `tone_cloud_production.py` 
 `gencloudcoherence(sP, change_dict)`: the main stimulus factory. Builds the time-frequency grid, selects frozen vs. new tones according to `percentage`, tiles across `nrep` cycles, synthesizes the waveform (summed ramped sinusoids), normalizes, zero-pads. Returns `(waveform, params)`
 
----
 
 ### `single_tone_cloud_schematic.py` 
 One unit of a tone cloud (1 cycle, 0.4 s). Produces schematic tone clouds` --> Figure A (spectogram-style grid with horizontal lines for each tone pip). 
 
----
 
 ### `repetition_coherence_gradient_schematic.py` 
 2-cycle strips at five coherence levels (0, 0.22, 0.44, 0.67, 1), side by side. Blue = frozen, gray = new. --> Figure 1C.  
 
----
 
 ### `task_illustration_schematic.py` 
 4-cycle "yes" trial (coherence = 0.78) and "no" trial (coherence =0), plotted separately --> `4rep_trial_yes.svg`, `4rep_trial_no.svg`--> Figure 1D. 
 
----
 
 ### `tap_illustrations.py` 
 Synthetic damped-sinusoid tap waveform (4 taps with jitter and negative asynchrony) --> `sms_taps_jittered.svg` --> Figure 1E tap overlay. 
 
----
 
 ### `plot_cochleagram.py` 
 Generates a tone cloud via `gencloudcoherence`, computes a cochleagram (using `pycochleagram`) and plots it --> Figure 1B. Requires the external  `pycochleagram` library and a local path to the toolbox. 
