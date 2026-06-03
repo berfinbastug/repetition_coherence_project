@@ -220,8 +220,8 @@ function ToneCloudViz({ tones, totalDuration, lowf, highf, freqgrid, unitdur, pl
 }
 
 // ─── Main App ───────────────────────────────────────────────────────────────
-
-const COHERENCE_STEPS = [0, 0.111, 0.222, 0.333, 0.444, 0.556, 0.667, 0.778, 0.889, 1.0];
+// change this part
+const COHERENCE_STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 const DURATION_OPTIONS = [
   { value: 0.4, label: "0.4 s" },
   { value: 0.7, label: "0.7 s" },
