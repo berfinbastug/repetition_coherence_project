@@ -548,6 +548,17 @@ plt.show()
 
 
 # %%
+# data frame for R analysis
+prop_sig_df = df_tap_clean.groupby(['unit_dur', 'percentage', 'participant_id']).agg(
+    mean_sig=('significant', 'mean'),
+    std_sig=('significant', 'std'),
+    n_sig = ('significant', 'sum'),
+    n_trial = ('significant', 'count'),
+).reset_index()
+
+prop_sig_df.to_csv('prop_sig_df_for_r.csv', index=False)
+
+# %%
 sig_df = df_tap_clean[df_tap_clean['significant'] == 1]
 # all delays
 # Prepare the result list for storing delays

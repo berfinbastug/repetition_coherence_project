@@ -211,3 +211,43 @@ Synthetic damped-sinusoid tap waveform (4 taps with jitter and negative asynchro
 
 ### `plot_cochleagram.py` 
 Generates a tone cloud via `gencloudcoherence`, computes a cochleagram (using `pycochleagram`) and plots it --> Figure 1B. Requires the external  `pycochleagram` library and a local path to the toolbox. 
+
+
+# Stimulus Generation Schematics 
+All inferential statistics are run in R. Each script is self-contained. It reads one csv (exported by the python scripts), runs the analysis, and prints results. 
+
+### `anova_prop_yes.R` 
+Detection accuracy 
+- Input: `detection_performance_for_r.csv` (from `rep_det_figures_pyes.py`) 
+- 3 x 10 repeated-measures anova (within: `unitdur` x `percentage`, DV: proportion of yes responses). Greenhouse-Geisser corrected output via `apa.exANOVA.table`.
+- seconday analysis: one-way anova on false alarm rates at coherence = 0 across unit durations, with group-level mean/SD summary. This verifies that false alarm rates are comparable across durations. 
+
+
+### `anova_threshold_detection.R` 
+Detection thresholds 
+- Input: `threshold_50_detection_for_r.csv` (from `rep_det_figures_pyes.py`) 
+- normality check via Q-Q plots
+- one-way repeated-measures anova (within: `unitdur`, DV: 50% detection threshold from Weibull fits). GG-corrected output. 
+- post-hoc pairwise paired t-tests with Bonferroni correction across all three unit duration pairs. 
+
+
+### `anova_threshold_sms.R` 
+SMS thresholds 
+- Input: `threshold_50_sms_for_r.csv` (from `sms_figures_sync.py`) 
+- same structure as the detection threshold script: normality check, one-way repeated-measures anova (within: `unitdur`, DV: 50% synchronization threshold), group-level mean/SEM summary. 
+- no post-hoc tests. the anova is non-significant. thresholds do not differ across durations in the SMS task. 
+
+
+### `anova_prop_significant.R` 
+SMS synchronization performance 
+- Input: `prop_sig_df_for_r.csv` (from `sms_figures_sync.py`) 
+- 3 x 10 repeated-measures ANOVA (within: `unit_dur` x `percentage`, DV: proportion of successfully synchronized trials). GG-corrected output. 
+- secondary one-way anova on performance collapsed across coherence levels per unit duration, with normality check and group-level mean/SEM summary. 
+
+
+### `anova_time.R` 
+RT and N cycles
+- Input: `n_cycle_for_r.csv` (from `rep_det_figures_rt.py`) 
+- analyses restricted to correct trials and run separately per coherence level. 
+- for both RT and N cycles at coherence = [10 levels]: Friedman test (non-parametric within-subjects) across unit durations, followed by pairwise Wilcoxon signed-rank tests with Bonferroni correction.   
+- Group-level mean/SD/SEM summary across all coherence levels also computed. 
