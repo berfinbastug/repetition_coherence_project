@@ -192,12 +192,13 @@ function ToneCloudViz({ tones, totalDuration, lowf, highf, freqgrid, unitdur, pl
           opacity={tone.frozen ? 1 : 0.55} />
       ))}
 
-      {/* Playhead */}
-      {playheadPos !== null && (
-        <line x1={toX(playheadPos)} x2={toX(playheadPos)}
-          y1={PAD.top} y2={H - PAD.bottom}
-          stroke="#E84545" strokeWidth={2} opacity={0.8} />
-      )}
+      {/* Playhead
+            {playheadPos !== null && (
+              <line x1={toX(playheadPos)} x2={toX(playheadPos)}
+                y1={PAD.top} y2={H - PAD.bottom}
+                stroke="#E84545" strokeWidth={2} opacity={0.8} />
+            )}
+      */} 
 
       {/* Cycle labels */}
       {Array.from({ length: Math.round(totalDuration / unitdur) }, (_, i) => (
