@@ -1,5 +1,11 @@
 Bastug et al., *"Computational Principles of Auditory Object Formation Are Revealed by Repetition Coherence."*
 
+# Interactive Demo
+[▶ Explore the stimuli](https://berfinbastug.github.io/repetition_coherence_project/)   
+Adjust coherence and unit duration, hear the tone clouds.
+
+---
+
 # Preprocessing & Utilities
 These scripts handle data preparation and minor supplementary outputs. They are not tied to a specific manuscript figure but feed into the main analysis pipelines. 
 
@@ -23,7 +29,7 @@ Produces polar histograms of tapping-phase distributions for one good and one ba
 ---
 
 # Repetition Detection — Analysis & Figure Code
-Analysis and figure-generation scripts for the **Repetition Detection task**  
+Analysis and figure-generation scripts for the **repetition detection task**  
 
 ### `rep_det_figures_pyes.py`  
 Detection accuracy (Figure 2)
@@ -46,6 +52,8 @@ Outputs:
 - `threshold_50_detection_for_r.csv` — individual detection thresholds.
 - `weibull_combined.svg`, `threshold_violin.svg` — figure panels.
 
+---
+
 ### `rep_det_figures_rt.py` 
 Reaction times & cycles (Figure 3) 
 Computes how long participants needed to reach a detection decision, in both seconds and repetition cycles.
@@ -65,7 +73,7 @@ Outputs:
 
 ---
 
-## Input data
+### Input data
 
 Both scripts read the same file:
 
@@ -84,7 +92,7 @@ Expected columns:
 
 ---
 
-## Outlier pipeline (shared by both scripts)
+### Outlier pipeline (shared by both scripts)
 
 1. Exclude anticipatory trials: `n_cycle = rt / unitdur < 1`.
 2. RT outliers per (coherence × unit duration) cell using Tukey's 1.5 × IQR rule.
@@ -94,7 +102,7 @@ Total excluded: ~4.05% of trials (manuscript Methods).
 
 ---
 
-## Notes / TODO
+### Notes / TODO
 
 - [ ] Replace hard-coded absolute paths with a config or CLI argument.
 - [ ] Factor shared outlier-cleaning code into a small `utils.py` (currently duplicated across the two scripts).
@@ -103,7 +111,7 @@ Total excluded: ~4.05% of trials (manuscript Methods).
 ---
 
 # Sensorimotor Synchronization — Analysis & Figure Code
-Analysis and figure-generation scripts for the **Sensorimotor Synchronization (SMS) task**  
+Analysis and figure-generation scripts for the **sensorimotor synchronization (SMS) task**  
 These scripts process trial-level tapping data and produce the panels in Figures 4 and 5 of the manuscript. 
 
 ### `tapping_analysis_repo.py` 
@@ -154,8 +162,10 @@ Key steps:
 
 Outputs:
 - **Figure 5A** — Three panels (one per unit duration) showing z-scored resultant length as a function of sliding window index. Coherence is represented as a color gradient. There is a significance line (p = 0.05). 
+  
+---
 
-## Input data
+### Input data
 
 Both SMS scripts read the same file:
 
@@ -171,8 +181,9 @@ Expected columns:
 - `actual_onset_values` — [AT SOME POINT ADD DETAILS OF WHAT THEY ARE]
 - `tap_onset_values` — [AT SOME POINT ADD DETAILS OF WHAT THEY ARE]
 
+---
 
-## Notes / TODO
+### Notes / TODO
 
 - [ ] Lines ~1-110 of the two SMS scripts are identical. Extract into `load_tapping_data()` in `tapping_analysis_repo.py`. 
 - [ ] Hard coded absolute path.  
@@ -186,56 +197,37 @@ Figure 1. All these scripts are inside stim_illustration.
 ### `stimulus_params.py` 
 Default parameter dictionary (`sP_default`): frequency range (200-3000 Hz), 0.4-octave grid step, 0.05 s time step, tone duration, unit duration, nrep, coherence, sample rate (44100 Hz), ramp time. 
 
+---
+
 ### `ramp_function.py` 
 `psyramp(x, rtime, fs)`: applies cosine-squared onset/offset ramps to individual tone pips (0.025s default). Prevents clicks at tone boundaries.
+
+---
 
 ### `tone_cloud_production.py` 
 `gencloudcoherence(sP, change_dict)`: the main stimulus factory. Builds the time-frequency grid, selects frozen vs. new tones according to `percentage`, tiles across `nrep` cycles, synthesizes the waveform (summed ramped sinusoids), normalizes, zero-pads. Returns `(waveform, params)`
 
+---
+
 ### `single_tone_cloud_schematic.py` 
 One unit of a tone cloud (1 cycle, 0.4 s). Produces schematic tone clouds` --> Figure A (spectogram-style grid with horizontal lines for each tone pip). 
+
+---
 
 ### `repetition_coherence_gradient_schematic.py` 
 2-cycle strips at five coherence levels (0, 0.22, 0.44, 0.67, 1), side by side. Blue = frozen, gray = new. --> Figure 1C.  
 
+---
+
 ### `task_illustration_schematic.py` 
 4-cycle "yes" trial (coherence = 0.78) and "no" trial (coherence =0), plotted separately --> `4rep_trial_yes.svg`, `4rep_trial_no.svg`--> Figure 1D. 
+
+---
 
 ### `tap_illustrations.py` 
 Synthetic damped-sinusoid tap waveform (4 taps with jitter and negative asynchrony) --> `sms_taps_jittered.svg` --> Figure 1E tap overlay. 
 
+---
+
 ### `plot_cochleagram.py` 
 Generates a tone cloud via `gencloudcoherence`, computes a cochleagram (using `pycochleagram`) and plots it --> Figure 1B. Requires the external  `pycochleagram` library and a local path to the toolbox. 
-
-
-
-### Interactive Demo
-[▶ Explore the stimuli](https://berfinbastug.github.io/repetition_coherence_project/)
-— adjust coherence and unit duration, hear the tone clouds.
-
-
-
-Let's first keep track of folders
-### Folders:
-1. detection_experiment
-2. tapping experiment
-3. observer_model
-4. svg_figures
-5. stim_illustration
-6. statistical_analyses
-   1. anova_prop_significant
-   2. anova_prop_yes
-   3. anova_threshold_detection
-   4. anova_threshold_sms
-   5. anova_time
-   6. CSVs
-      1. detection_performance_for_r.csv
-      2. n_cycle_for_r.csv
-      3. prop_sig_df_for_r.csv
-      4. threshold_50_detection_for_r.csv
-      5. threshold_50_sms_for_r.csv
-   
-
-
-
-
